@@ -1,0 +1,59 @@
+# .github/workflows/release.yml
+name: Release binaries
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: ignr
+            asset_name: ignr-linux
+          - os: macos-latest
+            artifact_name: ignr
+            asset_name: ignr-macos
+          - os: windows-latest
+            artifact_name: ignr.exe
+            asset_name: ignr-windows.exe
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install dependencies (incl. dev)
+        run: uv sync --dev
+
+      - name: Build binary
+        run: uv run pyinstaller --onefile --name ignr src/ignr/main.py
+
+      - name: Rename artifact
+        shell: bash
+        run: mv dist/${{ matrix.artifact_name }} dist/${{ matrix.asset_name }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset_name }}
+          path: dist/${{ matrix.asset_name }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/**/*
