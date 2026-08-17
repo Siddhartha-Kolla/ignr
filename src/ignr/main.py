@@ -207,12 +207,9 @@ def import_repo(name: str):
         print(f"Couldn't find a template for {name}")
         raise typer.Exit(code=1)
     add_template_to_cache(name, response.text, "selected_templates")
-
+    
 @import_app.command(name="--custom")
 def import_custom(path: str, name: str):
     """Import a custom .gitignore file under a given name."""
     content = Path(path).read_text()
     add_template_to_cache(name, content, "custom_templates")
-
-if __name__ == "__main__":
-    app()
