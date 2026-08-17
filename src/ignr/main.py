@@ -199,7 +199,7 @@ def import_main(ctx: typer.Context):
         name = inquirer.text(message="Name for the template: ").execute()
         import_custom(path, name)
 
-@import_app.command(name="--repo")
+@import_app.command(name="repo")
 def import_repo(name: str):
     """Import a template from the GitHub gitignore repo."""
     response = requests.get(f"https://raw.githubusercontent.com/github/gitignore/refs/heads/main/{name}.gitignore")
@@ -207,8 +207,8 @@ def import_repo(name: str):
         print(f"Couldn't find a template for {name}")
         raise typer.Exit(code=1)
     add_template_to_cache(name, response.text, "selected_templates")
-    
-@import_app.command(name="--custom")
+
+@import_app.command(name="custom")
 def import_custom(path: str, name: str):
     """Import a custom .gitignore file under a given name."""
     content = Path(path).read_text()
