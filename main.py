@@ -141,6 +141,28 @@ def update():
         json.dump(config, f)
     print("Cache updated successfully.")
 
+@app.command(name="delete")
+def delete(name: str):
+    """Delete a template from the cache.!"""
+    target = CACHE_FOLDER / f"{name}.gitignore"
+    if not target.exists():
+        print(f"No template named '{name}' was found in the cache.")
+        raise typer.Exit(code=1)
+    confirm = inquirer.confirm(message=f"Are you sure you want to delete the template '{name}'?", default=False).execute()
+    if not confirm:
+        print("Deletion cancelled.")
+        raise typer.Exit(code=1)
+    target.unlink()
+    with open(CACHE_CONFIG_FILE, "r") as f:
+        config = json.load(f)
+    if name in config["selected_templates"]:
+        config["selected_templates"].remove(name)
+    if name in config["custom_templates"]:
+        config["custom_templates"].remove(name)
+    with open(CACHE_CONFIG_FILE, "w") as f:
+        json.dump(config, f)
+    print(f"Template '{name}' deleted successfully.")
+
 import_app = typer.Typer(invoke_without_command=True)
 app.add_typer(import_app, name="import")
 
