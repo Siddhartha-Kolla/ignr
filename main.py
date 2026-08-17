@@ -141,6 +141,23 @@ def update():
         json.dump(config, f)
     print("Cache updated successfully.")
 
+@app.command(name="list")
+def list_templates():
+    """List all templates in the cache."""
+    with open(CACHE_CONFIG_FILE, "r") as f:
+        config = json.load(f)
+    if len(config["selected_templates"]) + len(config["custom_templates"]) == 0:
+        print("No templates in the cache.")
+        raise typer.Exit(code=1)
+    if len(config["selected_templates"]) > 0:
+        print("Selected templates:")
+        for template in config["selected_templates"]:
+            print(f"  - {template}")
+    if len(config["custom_templates"]) > 0:
+        print("\nCustom templates:")
+        for template in config["custom_templates"]:
+            print(f"  - {template}")
+
 @app.command(name="delete")
 def delete(name: str):
     """Delete a template from the cache.!"""
