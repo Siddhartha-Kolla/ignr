@@ -51,6 +51,28 @@ def ensure_initialized():
 
 
 
+def add_template_to_cache(name: str, content: str, list_key: str):
+    """Write a template to the cache and register it in the config, confirming before overwrite."""
+    target = CACHE_FOLDER / f"{name}.gitignore"
+    if target.exists():
+        overwrite = inquirer.confirm(message=f"A template named '{name}' already exists. Overwrite it?", default=False).execute()
+        if not overwrite:
+            print("Import cancelled.")
+            raise typer.Exit(code=1)
+
+    with open(target, "w") as f:
+        f.write(content)
+
+    with open(CACHE_CONFIG_FILE, "r") as f:
+        config = json.load(f)
+    if name not in config[list_key]:
+        config[list_key].append(name)
+        config[list_key] = sorted(config[list_key])
+    with open(CACHE_CONFIG_FILE, "w") as f:
+        json.dump(config, f)
+    print(f"Imported '{name}' template.")
+
+
 def retrieve_template(lang: str, config = None):
     if config is None:
         with open(CACHE_CONFIG_FILE, "r") as f:
@@ -78,10 +100,13 @@ def main(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         with open(CACHE_CONFIG_FILE, "r") as f:
             config = json.load(f)
-        other_controls = ["View All"]
+        other_controls = ["View All", "Add a new template (Repository or Custom)"]
         choice = inquirer.fuzzy(message="Choose the language for the template: ", choices=config["selected_templates"]+config["custom_templates"]+other_controls).execute()
         if choice == "View All":
             choice = inquirer.fuzzy(message="Choose the language for the template: ", choices=config["custom_templates"]+config["all_templates_list"]).execute()
+        if choice == "Add a new template (Repository or Custom)":
+            import_main(ctx)
+            return
         if retrieve_template(choice):
             print(f"Initialized .gitignore with {choice} template.")
         else:
@@ -90,9 +115,9 @@ def main(ctx: typer.Context):
 
 
 
-@app.command(name="fetch")
+@app.command(name="add")
 def fetch(name: str):
-    """Fetch a .gitignore template by name."""
+    """Add a .gitignore template to the project."""
     if retrieve_template(name):
         print(f"Initialized .gitignore with {name} template.")
     else:
@@ -115,6 +140,40 @@ def update():
     with open(CACHE_CONFIG_FILE, "w") as f:
         json.dump(config, f)
     print("Cache updated successfully.")
+
+import_app = typer.Typer(invoke_without_command=True)
+app.add_typer(import_app, name="import")
+
+@import_app.callback(invoke_without_command=True)
+def import_main(ctx: typer.Context):
+    """Import a .gitignore template from the repo list or a custom file."""
+    if ctx.invoked_subcommand is not None:
+        return
+    choice = inquirer.select(message="Import from:", choices=["Repository template", "Custom file"]).execute()
+    if choice == "Repository template":
+        with open(CACHE_CONFIG_FILE, "r") as f:
+            config = json.load(f)
+        name = inquirer.fuzzy(message="Choose a template to import: ", choices=config["all_templates_list"]).execute()
+        import_repo(name)
+    else:
+        path = inquirer.filepath(message="Path to the .gitignore file: ").execute()
+        name = inquirer.text(message="Name for the template: ").execute()
+        import_custom(path, name)
+
+@import_app.command(name="--repo")
+def import_repo(name: str):
+    """Import a template from the GitHub gitignore repo."""
+    response = requests.get(f"https://raw.githubusercontent.com/github/gitignore/refs/heads/main/{name}.gitignore")
+    if response.text == "404: Not Found":
+        print(f"Couldn't find a template for {name}")
+        raise typer.Exit(code=1)
+    add_template_to_cache(name, response.text, "selected_templates")
+
+@import_app.command(name="--custom")
+def import_custom(path: str, name: str):
+    """Import a custom .gitignore file under a given name."""
+    content = Path(path).read_text()
+    add_template_to_cache(name, content, "custom_templates")
 
 if __name__ == "__main__":
     app()
