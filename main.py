@@ -25,6 +25,7 @@ def fetch_templates_from_github():
 
 def initialize():
     config = {}
+    config["last_updated"] = time()
     config['all_templates_list'] = fetch_templates_from_github()
     choices = inquirer.fuzzy(message="Choose the language for the template: ", choices=config['all_templates_list'], multiselect=True,).execute()
     for choice in choices:
@@ -104,6 +105,16 @@ def init():
     """Initialize the tool by fetching all templates and storing them in a cache."""
     initialize()
 
+@app.command(name="update")
+def update():
+    """Update the cache with the latest templates from GitIgnore repository."""
+    with open(CACHE_CONFIG_FILE, "r") as f:
+        config = json.load(f)
+    config["last_updated"] = time()
+    config['all_templates_list'] = fetch_templates_from_github()
+    with open(CACHE_CONFIG_FILE, "w") as f:
+        json.dump(config, f)
+    print("Cache updated successfully.")
 
 if __name__ == "__main__":
     app()
