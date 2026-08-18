@@ -13,6 +13,18 @@ CACHE_FOLDER.mkdir(parents=True, exist_ok=True)
 CACHE_REFRESH_INTERVAL = 60 * 60 * 24 * 7
 app = typer.Typer()
 
+def banner():
+    font = """
+██╗ ██████╗ ███╗   ██╗██████╗ 
+██║██╔════╝ ████╗  ██║██╔══██╗
+██║██║  ███╗██╔██╗ ██║██████╔╝
+██║██║   ██║██║╚██╗██║██╔══██╗
+██║╚██████╔╝██║ ╚████║██║  ██║
+╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═╝
+                              
+"""
+    print(font)
+
 def fetch_templates_from_github():
     url = "https://api.github.com/repos/github/gitignore/git/trees/main?recursive=1"
     response = requests.get(url).json()
@@ -46,9 +58,6 @@ def ensure_initialized():
             typer.echo("Cannot continue without initialization.")
             raise typer.Exit(code=1)
         initialize()
-
-
-
 
 
 def add_template_to_cache(name: str, content: str, list_key: str):
@@ -97,6 +106,7 @@ def retrieve_template(lang: str, config = None):
 @app.callback(invoke_without_command=True)
 def main(ctx: typer.Context):
     ensure_initialized()
+    banner()
     if ctx.invoked_subcommand is None:
         with open(CACHE_CONFIG_FILE, "r") as f:
             config = json.load(f)
