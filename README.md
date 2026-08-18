@@ -1,5 +1,7 @@
 # ignr
 
+![banner](./banner.png)
+
 ignr is a small command-line tool that fetches .gitignore templates directly from Github's official github/githinore repo, so you never have to manually open the site, find your language, and copy-paste the contents into a new project by hand. It offers multiple features, including the ability to select commonly used language templates or create and add your own custom templates.
 
 ## Installation

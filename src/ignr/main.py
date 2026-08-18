@@ -107,11 +107,11 @@ def main(ctx: typer.Context):
     if ctx.invoked_subcommand is None:
         with open(CACHE_CONFIG_FILE, "r") as f:
             config = json.load(f)
-        other_controls = ["View all templates", "Add a new template"]
-        choice = inquirer.fuzzy(message="Select a template:", choices=config["selected_templates"]+config["custom_templates"]+other_controls).execute()
+        other_controls = ["View all templates", "Add a new template (Repository or Custom)"]
+        choice = inquirer.fuzzy(message="Select a .gitignore template:", choices=config["selected_templates"]+config["custom_templates"]+other_controls).execute()
         if choice == "View all templates":
-            choice = inquirer.fuzzy(message="Select a template:", choices=config["custom_templates"]+config["all_templates_list"]).execute()
-        if choice == "Add a new template":
+            choice = inquirer.fuzzy(message="Select a .gitignore template:", choices=config["custom_templates"]+config["all_templates_list"]).execute()
+        if choice == "Add a new template (Repository or Custom)":
             import_main(ctx)
             return
         if retrieve_template(choice):
@@ -199,7 +199,7 @@ def import_main(ctx: typer.Context):
     if choice == "Repository template":
         with open(CACHE_CONFIG_FILE, "r") as f:
             config = json.load(f)
-        name = inquirer.fuzzy(message="Select a template to import:", choices=config["all_templates_list"]).execute()
+        name = inquirer.fuzzy(message="Select a .gitignore template to import:", choices=config["all_templates_list"]).execute()
         import_repo(name)
     else:
         path = inquirer.filepath(message="Path to the .gitignore file:").execute()
