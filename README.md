@@ -4,6 +4,7 @@ ignr is a small command-line tool that fetches .gitignore templates directly fro
 
 ## Installation
 
+### Option 1: Python
 `ignr` requires Python 3.11+.
 
 Clone the repo and install it as a tool:
@@ -14,7 +15,8 @@ cd ignr
 uv tool install .
 ```
 
-
+### Option 2: Binaries
+See the latest releases section for more info.
 
 ## Docs
 
